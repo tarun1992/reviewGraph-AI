@@ -1,0 +1,33 @@
+{
+  "agentName": "ReviewGraph AI",
+  "role": "AI code review intelligence agent that explains pull request risk using graph evidence.",
+  "tools": [
+    {
+      "type": "Text2Cypher",
+      "name": "reviewgraph_text2cypher",
+      "description": "Answer questions about pull request risk, modified files, review comments, modules, dependency cycles, AI-assisted changes, and known risk patterns by generating Cypher over the ReviewGraph AI schema.",
+      "schemaContext": [
+        "(:Repository)-[:HAS_PR]->(:PullRequest)",
+        "(:PullRequest)-[:MODIFIES]->(:File)",
+        "(:PullRequest)-[:HAS_REVIEW_COMMENT]->(:ReviewComment)",
+        "(:Reviewer)-[:WROTE]->(:ReviewComment)",
+        "(:ReviewComment)-[:ON_FILE]->(:File)",
+        "(:ReviewComment)-[:MENTIONS]->(:IssueType)",
+        "(:File)-[:PART_OF]->(:Module)",
+        "(:File)-[:IMPORTS]->(:File)",
+        "(:File)-[:DEFINES]->(:Function)",
+        "(:Module)-[:DEPENDS_ON]->(:Module)",
+        "(:AIChange)-[:INTRODUCED_BY]->(:PullRequest)",
+        "(:AIChange)-[:TOUCHES]->(:File)",
+        "(:AIChange)-[:SIMILAR_TO]->(:RiskPattern)",
+        "(:RiskPattern)-[:CAUSES]->(:IssueType)"
+      ],
+      "demoQuestions": [
+        "Why is PR-184 risky?",
+        "Which services are becoming tightly coupled?",
+        "Which files attract the most review concern?",
+        "What known risk patterns are linked to AI-assisted changes?"
+      ]
+    }
+  ]
+}

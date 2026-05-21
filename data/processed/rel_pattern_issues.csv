@@ -1,0 +1,5 @@
+patternId,issueTypeId
+scattered_auth_policy,security_sensitive_change
+scattered_auth_policy,duplicate_logic
+hidden_side_effect_retry,duplicate_logic
+cross_layer_shortcut,architecture_coupling

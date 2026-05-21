@@ -1,0 +1,3 @@
+id,repoId,number,title,author,state,isAiAssisted,riskScore,url
+PR-184,repo_reviewgraph_demo,184,AI-assisted auth token refactor,maya-chen,merged,true,88,https://github.com/example/reviewgraph-demo-services/pull/184
+PR-207,repo_reviewgraph_demo,207,Generated billing retry helper,noah-patel,merged,true,67,https://github.com/example/reviewgraph-demo-services/pull/207

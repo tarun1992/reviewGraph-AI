@@ -1,0 +1,33 @@
+{
+  "name": "reviewgraph-ai",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:client": "vite --host 127.0.0.1",
+    "dev:server": "node --watch server/index.js",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "seed": "node server/seed.js",
+    "dataset:sample": "node scripts/prepareDataset.js --sample",
+    "dataset:repo": "node scripts/prepareDataset.js --repo",
+    "dataset:kaggle": "node scripts/prepareDataset.js --kaggle",
+    "aura:import": "node scripts/importToNeo4j.js",
+    "aura:verify": "node scripts/verifyAura.js",
+    "aura:vectors": "node scripts/createVectorIndexes.js"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "^5.0.0",
+    "concurrently": "^9.2.1",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "lucide-react": "^0.544.0",
+    "neo4j-driver": "^5.28.1",
+    "vite": "^7.1.5",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {}
+}
