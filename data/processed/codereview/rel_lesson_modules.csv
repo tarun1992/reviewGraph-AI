@@ -1,0 +1,5 @@
+lessonId,moduleId
+lesson_billing_auth,mod_billing
+lesson_circular,mod_auth
+lesson_circular,mod_tokens
+lesson_circular,mod_users

@@ -1,0 +1,3 @@
+id,statement,recommends,fromIncident
+lesson_billing_auth,BillingService must not depend on AuthService directly; validate via events instead.,Add a 'no cross-domain sync dependency' check to the review checklist.,Incident-47
+lesson_circular,Avoid circular dependencies across identity services; they cause deadlocks under load.,Run dependency-cycle review before merging identity changes.,Incident-108

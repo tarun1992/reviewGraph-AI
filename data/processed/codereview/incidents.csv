@@ -1,0 +1,3 @@
+id,title,severity,rootCause,summary,tracedToPr
+Incident-47,Billing outage from auth coupling,SEV1,Service coupling regression,A direct BillingService -> AuthService call introduced in PR-312 caused cascading billing failures during an auth deploy.,PR-312
+Incident-108,Identity auth request deadlock,SEV2,Circular dependency,A circular dependency across identity services produced request deadlocks under load.,PR-184

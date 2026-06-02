@@ -1,0 +1,10 @@
+id,repoId,path,moduleId,extension,securitySensitive
+file_token_policy,repo_reviewgraph_demo,src/services/auth/tokenPolicy.ts,mod_auth,ts,true
+file_session_guard,repo_reviewgraph_demo,src/utils/sessionGuard.ts,mod_auth,ts,true
+file_token_service,repo_reviewgraph_demo,src/services/tokens/tokenService.ts,mod_tokens,ts,true
+file_user_service,repo_reviewgraph_demo,src/services/users/userService.ts,mod_users,ts,true
+file_retry_invoice,repo_reviewgraph_demo,src/services/billing/retryInvoice.ts,mod_billing,ts,false
+file_billing_auth,repo_reviewgraph_demo,src/services/billing/authCheck.ts,mod_billing,ts,true
+file_email_queue,repo_reviewgraph_demo,src/services/notifications/emailQueue.ts,mod_notifications,ts,false
+file_retry,repo_reviewgraph_demo,src/shared/retry.ts,mod_shared,ts,false
+file_profile_form,repo_reviewgraph_demo,src/features/profile/settingsForm.tsx,mod_users,tsx,false

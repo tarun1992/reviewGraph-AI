@@ -1,6 +1,0 @@
-id,name,description,severity
-security_sensitive_change,Security Sensitive Change,"Changes authentication, tokens, permissions, secrets, or other high-risk code.",high
-duplicate_logic,Duplicate Logic,Logic repeats existing behavior and may diverge across modules.,medium
-architecture_coupling,Architecture Coupling,"A change creates tight dependencies, cycles, or cross-layer leakage.",high
-maintainability,Maintainability,"Code is harder to review, test, or safely evolve.",medium
-review_concern,Review Concern,General human review concern that needs investigation.,low

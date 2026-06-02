@@ -1,0 +1,68 @@
+{
+  "name": "ReviewGraph AI",
+  "description": "Graph-native code-review intelligence. Explains pull request risk using evidence from code structure, review history, dependencies, AI changes, incidents, decisions, and lessons.",
+  "model": "gemini-2.5-flash",
+  "systemPrompt": "You are ReviewGraph AI, an engineering reviewer that reasons over a Neo4j knowledge graph of pull requests, files, modules, services, teams, incidents, architecture decisions, and lessons learned. Always answer with: (1) the direct review insight, (2) the graph evidence that supports it, (3) the exact relationships or paths that matter, and (4) a practical recommendation before merge. Treat AI assistance as a review signal, not a verdict. Never give a verdict without citing graph evidence.",
+  "tools": [
+    {
+      "name": "explain_pr_risk",
+      "type": "cypher_template",
+      "description": "Explain why a pull request is risky using modified files, modules, review concerns, dependency cycles, and similar risk patterns.",
+      "parameters": [{ "name": "prId", "example": "PR-512" }],
+      "cypher": "MATCH (pr:PullRequest {id: $prId})-[:MODIFIES]->(file:File)-[:PART_OF]->(module:Module) OPTIONAL MATCH (pr)-[:HAS_REVIEW_COMMENT]->(c:ReviewComment)-[:MENTIONS]->(i:IssueType) OPTIONAL MATCH cyclePath=(module)-[:DEPENDS_ON*1..3]->(module) OPTIONAL MATCH (a:AIChange)-[:INTRODUCED_BY]->(pr)-[:MODIFIES]->(:File)<-[:TOUCHES]-(a) OPTIONAL MATCH (a)-[:SIMILAR_TO]->(p:RiskPattern) RETURN pr.id AS pr, pr.title AS title, collect(DISTINCT file.path) AS files, collect(DISTINCT module.name) AS modules, collect(DISTINCT i.name) AS reviewIssues, collect(DISTINCT p.name) AS riskPatterns, count(DISTINCT cyclePath) AS dependencyCycles"
+    },
+    {
+      "name": "change_impact",
+      "type": "cypher_template",
+      "description": "Show the services and owning teams a pull request impacts.",
+      "parameters": [{ "name": "prId", "example": "PR-512" }],
+      "cypher": "MATCH (pr:PullRequest {id: $prId})-[:MODIFIES]->(:File)-[:PART_OF]->(:Module)-[:IN_SERVICE]->(s:Service) OPTIONAL MATCH (t:Team)-[:OWNS]->(s) RETURN s.name AS service, s.criticality AS criticality, collect(DISTINCT t.name) AS owningTeams"
+    },
+    {
+      "name": "related_incidents",
+      "type": "cypher_template",
+      "description": "Find past incidents that impacted the same services as a pull request.",
+      "parameters": [{ "name": "prId", "example": "PR-512" }],
+      "cypher": "MATCH (pr:PullRequest {id: $prId})-[:MODIFIES]->(:File)-[:PART_OF]->(:Module)-[:IN_SERVICE]->(s:Service) MATCH (incident:Incident)-[:IMPACTED]->(s) RETURN DISTINCT incident.id AS incident, incident.title AS title, incident.rootCause AS rootCause, incident.severity AS severity"
+    },
+    {
+      "name": "tightly_coupled_modules",
+      "type": "cypher_template",
+      "description": "Find modules in dependency cycles or tight coupling.",
+      "parameters": [],
+      "cypher": "MATCH path=(m:Module)-[:DEPENDS_ON*1..3]->(m) RETURN [n IN nodes(path) | n.name] AS cycle, length(path) AS cycleLength ORDER BY cycleLength ASC LIMIT 10"
+    },
+    {
+      "name": "recommend_reviewers",
+      "type": "cypher_template",
+      "description": "Recommend reviewers for a pull request based on service ownership, prior reviews of the same files, and security sensitivity.",
+      "parameters": [{ "name": "prId", "example": "PR-512" }],
+      "cypher": "MATCH (pr:PullRequest {id: $prId})-[:MODIFIES]->(file:File)-[:PART_OF]->(:Module)-[:IN_SERVICE]->(s:Service) OPTIONAL MATCH (author:Developer)-[:AUTHORED]->(pr) OPTIONAL MATCH (owner:Developer)-[:MEMBER_OF]->(:Team)-[:OWNS]->(s) OPTIONAL MATCH (prev:Developer)-[:WROTE]->(:ReviewComment)-[:ON_FILE]->(file) WITH author, collect(DISTINCT owner) + collect(DISTINCT prev) AS candidates UNWIND candidates AS dev WITH author, dev WHERE dev IS NOT NULL AND (author IS NULL OR dev <> author) RETURN dev.name AS reviewer, count(*) AS signals ORDER BY signals DESC"
+    },
+    {
+      "name": "risk_propagation",
+      "type": "cypher_template",
+      "description": "Risk propagation: find downstream services that consume the services a pull request touches and could break if it merges.",
+      "parameters": [{ "name": "prId", "example": "PR-512" }],
+      "cypher": "MATCH (pr:PullRequest {id: $prId})-[:MODIFIES]->(:File)-[:PART_OF]->(:Module)-[:IN_SERVICE]->(touched:Service) WITH collect(DISTINCT touched) AS touchedServices UNWIND touchedServices AS touched MATCH (cm:Module)-[:DEPENDS_ON]->(:Module)-[:IN_SERVICE]->(touched) MATCH (cm)-[:IN_SERVICE]->(downstream:Service) WHERE NOT downstream IN touchedServices RETURN DISTINCT downstream.name AS service, downstream.criticality AS criticality"
+    },
+    {
+      "name": "architecture_compliance",
+      "type": "cypher_template",
+      "description": "Check whether a pull request introduces a dependency forbidden by an architectural decision (ADR).",
+      "parameters": [{ "name": "prId", "example": "PR-512" }],
+      "cypher": "MATCH (pr:PullRequest {id: $prId})-[:MODIFIES]->(file:File)-[:INTRODUCES_DEPENDENCY]->(to:Service)<-[:FORBIDS_DEPENDENCY_TO]-(decision:Decision) OPTIONAL MATCH (decision)-[:RECORDED_IN]->(adr:ADR) RETURN file.path AS file, decision.summary AS rule, adr.id AS adr"
+    },
+    {
+      "name": "reviewgraph_text2cypher",
+      "type": "text2cypher",
+      "description": "Answer open-ended questions about pull request risk, files, modules, dependencies, reviewer recommendation, risk propagation, architectural compliance, AI changes, incidents, decisions, and lessons by generating Cypher over the ReviewGraph schema."
+    },
+    {
+      "name": "similar_concerns",
+      "type": "similarity_search",
+      "description": "Find review comments, AI changes, or risk patterns semantically similar to a concern.",
+      "indexes": ["review_comment_embedding", "ai_change_embedding", "risk_pattern_embedding"]
+    }
+  ]
+}

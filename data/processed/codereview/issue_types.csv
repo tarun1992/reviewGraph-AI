@@ -1,0 +1,6 @@
+id,name,severity,description
+issue_security,Security Sensitive Change,high,"Touches authentication, tokens, permissions, or secrets."
+issue_duplicate,Duplicate Logic,medium,Logic repeats existing behavior and may diverge.
+issue_coupling,Architecture Coupling,high,"Creates tight dependencies, cycles, or cross-layer leakage."
+issue_maintainability,Maintainability,medium,"Harder to review, test, or safely evolve."
+issue_concern,Review Concern,low,General review concern needing investigation.

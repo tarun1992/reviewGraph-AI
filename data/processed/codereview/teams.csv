@@ -1,0 +1,4 @@
+id,name,domain
+team_identity,Identity Team,Authentication & Accounts
+team_payments,Payments Team,Billing & Payments
+team_platform,Platform Team,Shared Infrastructure

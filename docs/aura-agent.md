@@ -151,24 +151,53 @@ Recommended scope:
 - Reviewer behavior
 - AI changes and risk patterns
 
-Schema summary:
+Schema summary (canonical, all three layers - see docs/product-context.md):
 
 ```text
+# Layer 1 - code & review
 (:Repository)-[:HAS_PR]->(:PullRequest)
 (:PullRequest)-[:MODIFIES]->(:File)
 (:PullRequest)-[:HAS_REVIEW_COMMENT]->(:ReviewComment)
-(:Reviewer)-[:WROTE]->(:ReviewComment)
+(:Developer)-[:WROTE]->(:ReviewComment)
+(:Developer)-[:AUTHORED]->(:PullRequest)
 (:ReviewComment)-[:ON_FILE]->(:File)
 (:ReviewComment)-[:MENTIONS]->(:IssueType)
 (:File)-[:PART_OF]->(:Module)
 (:File)-[:IMPORTS]->(:File)
 (:File)-[:DEFINES]->(:Function)
 (:Module)-[:DEPENDS_ON]->(:Module)
+(:Module)-[:IN_SERVICE]->(:Service)
 (:AIChange)-[:INTRODUCED_BY]->(:PullRequest)
 (:AIChange)-[:TOUCHES]->(:File)
 (:AIChange)-[:SIMILAR_TO]->(:RiskPattern)
 (:RiskPattern)-[:CAUSES]->(:IssueType)
+
+# Layer 2 - operations, people, security, org knowledge
+(:Developer)-[:MEMBER_OF]->(:Team)
+(:Team)-[:OWNS]->(:Service)
+(:SecurityFinding)-[:RAISED_ON]->(:PullRequest)
+(:SecurityFinding)-[:AFFECTS]->(:File)
+(:PullRequest)-[:SHIPPED_IN]->(:Release)
+(:Release)-[:DEPLOYED_BY]->(:Deployment)
+(:Deployment)-[:TARGETS]->(:Service)
+(:Incident)-[:IMPACTED]->(:Service)
+(:Incident)-[:TRACED_TO]->(:PullRequest)
+(:ADR)-[:GOVERNS]->(:Service)
+
+# Layer 3 - agent memory
+(:Decision)-[:ABOUT]->(:Service)
+(:Decision)-[:RECORDED_IN]->(:ADR)
+(:PullRequest)-[:ASSESSED_AS]->(:RiskAssessment)-[:JUSTIFIED_BY]->(:Evidence)-[:CITES]->()
+(:Incident)-[:PRODUCED]->(:Lesson)
+(:Lesson)-[:APPLIES_TO]->(:Module|:RiskPattern)
 ```
+
+Additional demo questions:
+
+- What is the impact of PR-512?
+- Are there incidents related to BillingService?
+- Does PR-512 violate an architecture decision?
+- What lessons apply to this change?
 
 ## Tool 5: Similarity Search
 

@@ -1,0 +1,3 @@
+id,title,status,governsServiceId
+ADR-7,"Services communicate via events, not direct calls",accepted,svc_billing
+ADR-12,JWT-only token validation policy,accepted,svc_auth

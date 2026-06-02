@@ -1,0 +1,5 @@
+aiChangeId,patternId,score
+ai_184_auth,pattern_scattered_auth,0.91
+ai_207_retry,pattern_hidden_retry,0.86
+ai_512_coupling,pattern_coupling_regression,0.88
+ai_512_coupling,pattern_cross_layer,0.72

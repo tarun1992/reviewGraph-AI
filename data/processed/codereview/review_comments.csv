@@ -1,0 +1,5 @@
+id,prId,reviewerId,fileId,issueTypeId,sentiment,body,embeddingText
+comment_184_1,PR-184,dev_security_reviewer,file_token_policy,issue_duplicate,negative,This duplicates token validation already in sessionGuard and makes the auth policy harder to maintain.,duplicate token validation session guard auth policy maintain
+comment_184_2,PR-184,dev_security_reviewer,file_token_service,issue_security,negative,"Security concern: token refresh now depends on user service, creating a circular auth dependency.",security token refresh user service circular auth dependency
+comment_207_1,PR-207,dev_platform_reviewer,file_retry_invoice,issue_duplicate,negative,Retry logic hides notification side effects and could send duplicate billing emails.,retry hides notification side effects duplicate billing emails
+comment_512_1,PR-512,dev_platform_reviewer,file_billing_auth,issue_coupling,negative,Billing should not call auth directly. This is the same coupling we reverted in PR-312.,billing should not call auth directly coupling reverted pr-312

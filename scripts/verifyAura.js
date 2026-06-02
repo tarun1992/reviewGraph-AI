@@ -27,7 +27,7 @@ try {
     MATCH (pr:PullRequest {id: "PR-184"})-[:MODIFIES]->(file:File)-[:PART_OF]->(module:Module)
     OPTIONAL MATCH path=(module)-[:DEPENDS_ON*1..3]->(module)
     RETURN pr.title AS title,
-           pr.riskScore AS riskScore,
+           pr.baseRiskScore AS baseRiskScore,
            collect(DISTINCT file.path) AS files,
            collect(DISTINCT module.name) AS modules,
            count(DISTINCT path) AS dependencyCycles
@@ -36,7 +36,7 @@ try {
   const row = risk.records[0];
   console.log("\nPR-184 verification");
   console.log(`Title: ${row.get("title")}`);
-  console.log(`Risk score: ${row.get("riskScore").toNumber()}`);
+  console.log(`Base risk score: ${row.get("baseRiskScore")?.toNumber?.() ?? row.get("baseRiskScore")}`);
   console.log(`Files: ${row.get("files").join(", ")}`);
   console.log(`Modules: ${row.get("modules").join(", ")}`);
   console.log(`Dependency cycles: ${row.get("dependencyCycles").toNumber()}`);

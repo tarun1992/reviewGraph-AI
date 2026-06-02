@@ -10,10 +10,8 @@
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
     "seed": "node server/seed.js",
-    "dataset:sample": "node scripts/prepareDataset.js --sample",
-    "dataset:repo": "node scripts/prepareDataset.js --repo",
-    "dataset:kaggle": "node scripts/prepareDataset.js --kaggle",
-    "aura:import": "node scripts/importToNeo4j.js",
+    "dataset": "node scripts/prepareDataset.js",
+    "decks": "node decks/build.js",
     "aura:verify": "node scripts/verifyAura.js",
     "aura:vectors": "node scripts/createVectorIndexes.js"
   },
@@ -21,13 +19,14 @@
     "@vitejs/plugin-react": "^5.0.0",
     "concurrently": "^9.2.1",
     "cors": "^2.8.5",
+    "cross-env": "^10.1.0",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
     "lucide-react": "^0.544.0",
     "neo4j-driver": "^5.28.1",
-    "vite": "^7.1.5",
+    "pptxgenjs": "^4.0.1",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
-  },
-  "devDependencies": {}
+    "react-dom": "^19.1.1",
+    "vite": "^7.1.5"
+  }
 }

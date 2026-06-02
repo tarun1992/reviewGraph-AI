@@ -1,0 +1,6 @@
+id,repoId,number,title,authorId,state,isAiAssisted,baseRiskScore,summary
+PR-184,repo_reviewgraph_demo,184,AI-assisted auth token refactor,dev_maya_chen,open,true,78,"Introduces duplicated token validation, touches security-sensitive auth code, and sits on a dependency cycle across identity services."
+PR-207,repo_reviewgraph_demo,207,Generated billing retry helper,dev_noah_patel,open,true,58,Adds retry logic similar to a rejected helper and increases coupling between billing and notification services.
+PR-219,repo_reviewgraph_demo,219,Manual profile settings cleanup,dev_elena_ruiz,open,false,22,Low-risk cleanup isolated to profile settings with no new service dependencies.
+PR-312,repo_reviewgraph_demo,312,Inline auth check inside billing retry,dev_liam_osei,reverted,false,81,Historical change that made BillingService depend directly on AuthService. Contributed to Incident-47 and was later reverted.
+PR-512,repo_reviewgraph_demo,512,Add inline auth validation to billing retry,dev_noah_patel,open,true,62,Reintroduces a direct BillingService -> AuthService dependency to validate tokens during invoice retries.

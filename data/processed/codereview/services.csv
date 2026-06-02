@@ -1,0 +1,6 @@
+id,name,criticality,teamId
+svc_auth,AuthService,high,team_identity
+svc_tokens,TokenService,high,team_identity
+svc_users,UserService,high,team_identity
+svc_billing,BillingService,high,team_payments
+svc_notifications,NotificationService,medium,team_platform

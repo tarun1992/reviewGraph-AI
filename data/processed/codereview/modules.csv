@@ -1,0 +1,7 @@
+id,repoId,name,layer,serviceId
+mod_auth,repo_reviewgraph_demo,AuthModule,domain,svc_auth
+mod_tokens,repo_reviewgraph_demo,TokensModule,domain,svc_tokens
+mod_users,repo_reviewgraph_demo,UsersModule,domain,svc_users
+mod_billing,repo_reviewgraph_demo,BillingModule,domain,svc_billing
+mod_notifications,repo_reviewgraph_demo,NotificationsModule,domain,svc_notifications
+mod_shared,repo_reviewgraph_demo,SharedModule,shared,svc_notifications

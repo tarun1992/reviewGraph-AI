@@ -1,0 +1,21 @@
+{
+  "securityGlobs": ["**/auth/**", "**/secrets/**"],
+  "adrs": [
+    {
+      "id": "ADR-7",
+      "title": "Services communicate via events, not direct calls",
+      "governsService": "billing",
+      "status": "accepted"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "decision_no_billing_auth",
+      "summary": "Billing must not depend on Auth directly",
+      "policy": "Use the events bus for cross-domain validation.",
+      "fromService": "billing",
+      "toService": "auth",
+      "adrId": "ADR-7"
+    }
+  ]
+}

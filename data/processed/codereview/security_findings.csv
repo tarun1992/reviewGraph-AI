@@ -1,0 +1,2 @@
+id,prId,fileId,severity,title,description
+finding_token_bypass,PR-184,file_token_policy,high,Possible token validation bypass,Duplicated validation path may skip the central policy check.

@@ -1,0 +1,4 @@
+id,prId,fileId,summary,embeddingText
+ai_184_auth,PR-184,file_token_policy,Generated auth token branch duplicates session guard validation and scatters policy.,generated auth token branch duplicate session guard validation scatter policy
+ai_207_retry,PR-207,file_retry_invoice,Generated retry helper wraps billing side effects and notification sends.,generated retry helper billing side effects notification sends duplicate
+ai_512_coupling,PR-512,file_billing_auth,"Generated inline auth validation makes billing depend directly on auth, mirroring a reverted change.",generated inline auth validation billing depend auth reverted coupling regression

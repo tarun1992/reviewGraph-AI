@@ -1,0 +1,7 @@
+patternId,issueTypeId
+pattern_scattered_auth,issue_security
+pattern_scattered_auth,issue_duplicate
+pattern_hidden_retry,issue_duplicate
+pattern_cross_layer,issue_coupling
+pattern_circular,issue_coupling
+pattern_coupling_regression,issue_coupling

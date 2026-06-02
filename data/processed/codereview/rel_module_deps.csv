@@ -1,0 +1,6 @@
+source,target,reason,regression
+mod_auth,mod_tokens,AuthService validates TokenService output,false
+mod_tokens,mod_users,TokenService resolves user state,false
+mod_users,mod_auth,UserService checks auth policy,false
+mod_billing,mod_notifications,Invoice retry sends email notification,false
+mod_billing,mod_auth,Billing retry calls auth validation inline,true

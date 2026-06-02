@@ -1,0 +1,3 @@
+id,summary,policy,status,aboutServiceId,adrId
+decision_no_billing_auth,BillingService must not depend on AuthService directly,Use the events bus for cross-domain validation.,active,svc_billing,ADR-7
+decision_jwt_only,Token validation uses a single JWT policy,All token validation must route through the central AuthModule policy.,active,svc_auth,ADR-12

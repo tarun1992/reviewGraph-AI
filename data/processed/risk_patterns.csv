@@ -1,4 +1,0 @@
-id,name,description,severity,embeddingText
-scattered_auth_policy,Scattered Auth Policy,Authorization or token validation policy is split across multiple modules.,high,auth token validation duplicated scattered policy permission risk
-hidden_side_effect_retry,Hidden Side Effect Retry,Retry helper hides side effects and can duplicate writes or notifications.,medium,retry side effect duplicate notification billing
-cross_layer_shortcut,Cross Layer Shortcut,Feature code bypasses service boundaries and imports infrastructure directly.,medium,cross layer import service boundary architecture coupling

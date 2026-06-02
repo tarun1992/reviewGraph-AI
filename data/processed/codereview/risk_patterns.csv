@@ -1,0 +1,6 @@
+id,name,severity,description,embeddingText
+pattern_scattered_auth,ScatteredAuthPolicy,high,Authorization or token validation policy is split across multiple modules.,auth token validation duplicated scattered policy permission risk
+pattern_hidden_retry,HiddenSideEffectRetry,medium,Retry helper hides side effects and can duplicate writes or notifications.,retry side effect duplicate notification billing
+pattern_cross_layer,CrossLayerShortcut,medium,Feature code bypasses service boundaries and imports infrastructure directly.,cross layer import service boundary architecture coupling
+pattern_circular,CircularDependency,high,"Modules form a dependency cycle, making changes ripple unpredictably.",circular dependency cycle identity auth ripple deadlock
+pattern_coupling_regression,ServiceCouplingRegression,high,A service reintroduces a direct dependency that previously caused an incident.,billing depends on auth direct coupling regression reverted incident
