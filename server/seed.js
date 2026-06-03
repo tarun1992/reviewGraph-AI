@@ -2,6 +2,7 @@
 // so the running app and the database agree. Each pack supplies its own
 // statements via seedStatements().
 
+import "./loadEnv.js";
 import { closeDriver, runCypher, getDriver } from "./neo4j.js";
 import { loadDomainPack, ACTIVE_DOMAIN } from "./domain/loader.js";
 

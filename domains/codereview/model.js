@@ -12,6 +12,7 @@
 // present) keeps working unchanged regardless of where the data came from.
 
 import { demoDataset } from "./sources/demo.js";
+import { getConfiguredSource, shouldFallbackToDemo } from "../../server/config.js";
 
 // Live bindings — reassigned by applyDataset(). Importers see the latest data.
 export let repositories = [];
@@ -103,13 +104,20 @@ export function getActiveSource() {
   return activeSource;
 }
 
-/** Resolve SOURCE from env: explicit SOURCE, or GITLAB_PROJECT → gitlab, GITHUB_REPO → github, else demo. */
+/** Resolve SOURCE from .env (see server/config.js). */
 export function resolveSource() {
-  const explicit = process.env.SOURCE?.toLowerCase();
-  if (explicit) return explicit;
-  if (process.env.GITLAB_PROJECT) return "gitlab";
-  if (process.env.GITHUB_REPO) return "github";
-  return "demo";
+  return getConfiguredSource();
+}
+
+function formatSourceError(platform, error) {
+  let message = error?.message || String(error);
+  if (/rate limit/i.test(message) && platform === "github" && !process.env.GITHUB_TOKEN) {
+    message += " — set GITHUB_TOKEN in .env (fine-grained or classic PAT).";
+  }
+  if (/401|403/.test(message) && platform === "gitlab" && !process.env.GITLAB_TOKEN) {
+    message += " — set GITLAB_TOKEN in .env for private or self-hosted GitLab.";
+  }
+  return message;
 }
 
 // Initialize the model from the configured source. Called once at startup by
@@ -124,12 +132,26 @@ export async function initModel() {
       const dataset = await loadGithubDataset();
       applyDataset(dataset);
       activeSource = "github";
+      const flagship = getFlagshipEntityId();
+      if (flagship) {
+        const { assessPullRequest } = await import("./assess.js");
+        const smoke = assessPullRequest(flagship);
+        console.log(
+          `[ReviewGraph] ingest rules: ${decisions.length} decisions, ${incidents.length} incidents · ${flagship} score=${smoke?.score ?? "?"} (${smoke?.evidence?.length ?? 0} evidence)`
+        );
+      }
       return { source: "github", repo: process.env.GITHUB_REPO, entities: pullRequests.length };
     } catch (error) {
-      console.error(`[ReviewGraph] GitHub source failed (${error.message}); falling back to demo data.`);
-      applyDataset(demoDataset);
-      activeSource = "demo";
-      return { source: "demo", error: error.message, entities: pullRequests.length };
+      const message = formatSourceError("github", error);
+      console.error(`[ReviewGraph] GitHub source failed (${message})`);
+      if (shouldFallbackToDemo()) {
+        applyDataset(demoDataset);
+        activeSource = "demo";
+        return { source: "demo", error: message, entities: pullRequests.length };
+      }
+      applyDataset({ repositories: [], pullRequests: [], flagshipEntityId: null });
+      activeSource = "github";
+      return { source: "github", error: message, entities: 0, repo: process.env.GITHUB_REPO };
     }
   }
 
@@ -141,10 +163,16 @@ export async function initModel() {
       activeSource = "gitlab";
       return { source: "gitlab", project: process.env.GITLAB_PROJECT, entities: pullRequests.length };
     } catch (error) {
-      console.error(`[ReviewGraph] GitLab source failed (${error.message}); falling back to demo data.`);
-      applyDataset(demoDataset);
-      activeSource = "demo";
-      return { source: "demo", error: error.message, entities: pullRequests.length };
+      const message = formatSourceError("gitlab", error);
+      console.error(`[ReviewGraph] GitLab source failed (${message})`);
+      if (shouldFallbackToDemo()) {
+        applyDataset(demoDataset);
+        activeSource = "demo";
+        return { source: "demo", error: message, entities: pullRequests.length };
+      }
+      applyDataset({ repositories: [], pullRequests: [], flagshipEntityId: null });
+      activeSource = "gitlab";
+      return { source: "gitlab", error: message, entities: 0, project: process.env.GITLAB_PROJECT };
     }
   }
 

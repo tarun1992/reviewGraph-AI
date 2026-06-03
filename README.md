@@ -15,7 +15,9 @@ Current Diff
 
 Because code review is fundamentally a **context problem**, not a diff problem — and that gap is widening as more code is written by AI.
 
-> **Start here:** [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) for step-by-step usage, and [docs/product-context.md](docs/product-context.md) for the full product vision and graph model.
+> **Start here:** [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) · [docs/CONFIGURATION.md](docs/CONFIGURATION.md) (where to enter credentials) · [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (diagrams) · [docs/IMPLEMENTATION.md](docs/IMPLEMENTATION.md) (what is built) · [docs/adr/](docs/adr/) (ADRs)
+
+**Yes — it is generic:** configure **any GitHub or GitLab repo** and **any Neo4j database** via `.env` only — ingest, Neo4j sync, and Aura Agent run automatically on startup. See [Generic repo setup](docs/GENERIC_REPO_SETUP.md) and [Configuration](docs/CONFIGURATION.md).
 
 ## The three layers
 
@@ -82,7 +84,7 @@ cp .env.example .env
 npm run dev
 ```
 
-Add a `.reviewgraph.json` at the repo root for architecture rules (ADRs, forbidden dependencies). See [`docs/reviewgraph-config.example.json`](docs/reviewgraph-config.example.json).
+Add org rules in the target repo as `docs/reviewgraph-config.json` (or `.reviewgraph.json` at the root). The ingest layer loads the **full JSON from the PR head branch** (GitHub truncates large config in diff patches). See [`docs/reviewgraph-config.example.json`](docs/reviewgraph-config.example.json).
 
 Point **any Neo4j** database (Aura, Desktop, Docker) with `NEO4J_URI` / `NEO4J_USER` / `NEO4J_PASSWORD`, then `npm run seed` to persist the ingested graph.
 
@@ -98,8 +100,15 @@ Without `GITHUB_REPO` or `GITLAB_PROJECT`, the built-in demo opens **`PR-512`**.
 Generate the presentation decks (real `.pptx`):
 
 ```bash
-npm run decks      # -> decks/dist/01-business-overview.pptx, 02-technical-overview.pptx, 03-getting-started.pptx
+npm run decks      # -> decks/dist/*.pptx (four decks; use DECKS_OUT=decks/dist-latest if dist is locked)
 ```
+
+| Deck | Audience |
+| --- | --- |
+| `01-business-overview.pptx` | Problem, value, positioning |
+| `02-technical-overview.pptx` | Layers, schema, Aura, configuration |
+| `03-getting-started.pptx` | Install, deploy, docs map |
+| `04-how-pr-analysis-works.pptx` | End-to-end PR analysis + 10‑min demo script |
 
 ## API
 
@@ -111,8 +120,9 @@ npm run decks      # -> decks/dist/01-business-overview.pptx, 02-technical-overv
 | GET | `/api/entities/:id` | Explainable assessment + graph-evidence view (incl. recommended reviewers + downstream impact) |
 | POST | `/api/ask` | Natural-language question → Text2Cypher answer |
 | POST | `/api/assess` | Compute and commit an assessment to agent memory |
+| POST | `/api/reload` | Re-ingest from GitHub/GitLab and re-sync Neo4j |
 | GET | `/api/memory` | Agent memory: decisions, lessons, incidents, recent assessments |
-| POST | `/api/cypher` | Run raw Cypher (Neo4j only) |
+| POST | `/api/cypher` | Raw Cypher — **off by default** (`ENABLE_DEV_CYPHER=true`, dev only) |
 
 ## Architecture in code
 
@@ -128,7 +138,22 @@ domains/codereview/         ReviewGraph AI: model, assess, questions (Text2Cyphe
                             present, knowledge (memory), seed, ingest, agent.json, import.cypher
 ```
 
-The Aura agent (system prompt + tools: `explain_pr_risk`, `recommend_reviewers`, `risk_propagation`, `architecture_compliance`, `related_incidents`, Text2Cypher) is defined as code in [`domains/codereview/agent.json`](domains/codereview/agent.json).
+**Aura Agent** is integrated three ways: (1) **local router** — `POST /api/ask` + [`questions.js`](domains/codereview/questions.js); (2) **hosted in-app** — set `AURA_CLIENT_ID`, `AURA_CLIENT_SECRET`, and `AURA_AGENT_INVOKE_URL` so Ask the Graph calls your Aura Agent via [`server/auraAgent.js`](server/auraAgent.js); (3) **Aura Console** — same tools from [`agent.json`](domains/codereview/agent.json) ([setup](docs/aura-console-agent-setup.md)). See [AURA_LIVE_INTEGRATION.md](docs/AURA_LIVE_INTEGRATION.md).
+
+## Documentation
+
+| Document | Purpose |
+| --- | --- |
+| [GETTING_STARTED.md](docs/GETTING_STARTED.md) | Install, run, review a live repo |
+| [GENERIC_REPO_SETUP.md](docs/GENERIC_REPO_SETUP.md) | Point at any repo with `.env` only |
+| [CONFIGURATION.md](docs/CONFIGURATION.md) | `.env`, UI, Aura Console — where to enter details |
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Technical architecture with diagrams |
+| [IMPLEMENTATION.md](docs/IMPLEMENTATION.md) | Full implementation checklist |
+| [product-context.md](docs/product-context.md) | Product vision and graph layers |
+| [aura-agent.md](docs/aura-agent.md) | Aura agent tools and prompts |
+| [AURA_LIVE_INTEGRATION.md](docs/AURA_LIVE_INTEGRATION.md) | Live Neo4j + Text2Cypher: what works in-app vs Aura Console |
+| [SECURITY.md](docs/SECURITY.md) | Credentials on server only; API sanitization and endpoint risks |
+| [adr/](docs/adr/) | Architecture decision records |
 
 ## Deploy to Neo4j Aura
 

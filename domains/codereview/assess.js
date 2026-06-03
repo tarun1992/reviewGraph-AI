@@ -20,7 +20,8 @@ import {
   findModuleCycles,
   lexicalSimilarity,
   prDownstreamServices,
-  recommendReviewers
+  recommendReviewers,
+  complianceViolations
 } from "./model.js";
 import { SEVERITY_WEIGHT, levelForScore, cite } from "../../server/domain/contract.js";
 
@@ -113,14 +114,24 @@ export function assessPullRequest(prId) {
     const fromService = index.services.get(fromServiceId);
     const toService = index.services.get(toServiceId);
 
-    const violatedDecision = decisions.find(
-      (decision) => decision.aboutServiceId === fromServiceId && decision.status === "active"
-    );
+    const violatedDecision = decisions.find((decision) => {
+      const f = decision.forbids;
+      return (
+        decision.status === "active" &&
+        f &&
+        f.fromServiceId === fromServiceId &&
+        f.toServiceId === toServiceId
+      );
+    });
 
-    // Prior PRs that created the same coupling and an incident it caused.
-    const priorPr = pullRequests.find(
-      (other) => other.id !== prId && prFiles(other.id).some((f) => f.id === file.id)
-    );
+    // Prior PRs that introduced the same coupling (especially reverted ones).
+    const priorPr = pullRequests.find((other) => {
+      if (other.id === prId) return false;
+      return prFiles(other.id).some((f) => {
+        const d = f.introducesDependency;
+        return d && d.fromServiceId === fromServiceId && d.toServiceId === toServiceId;
+      });
+    });
     const relatedIncident = incidents.find(
       (incident) => priorPr && incident.tracedToPr === priorPr.id
     );
@@ -148,8 +159,37 @@ export function assessPullRequest(prId) {
       severity: "high",
       title: "Reintroduces a previously harmful service coupling",
       detail,
-      weight: relatedIncident ? 25 : 15,
+      weight: relatedIncident ? 25 : violatedDecision ? 20 : 15,
       cites
+    });
+  }
+
+  for (const violation of complianceViolations(prId)) {
+    evidence.push({
+      kind: "architecture_violation",
+      severity: "high",
+      title: "Violates architecture policy",
+      detail: `${violation.file.path} breaks "${violation.decision.summary}" (${violation.adr?.title || violation.decision.adrId}).`,
+      weight: 18,
+      cites: [
+        cite("File", violation.file.id, violation.file.path),
+        cite("Decision", violation.decision.id, violation.decision.summary),
+        violation.adr && cite("ADR", violation.adr.id, violation.adr.title),
+        cite("Service", violation.from.id, violation.from.name),
+        cite("Service", violation.to.id, violation.to.name)
+      ].filter(Boolean)
+    });
+  }
+
+  const downstream = prDownstreamServices(prId);
+  if (downstream.length > 0) {
+    evidence.push({
+      kind: "blast_radius",
+      severity: downstream.length > 2 ? "high" : "medium",
+      title: "Downstream services may break on merge",
+      detail: `Changes propagate to ${downstream.length} consumer service(s): ${downstream.map((s) => s.name).join(", ")}.`,
+      weight: Math.min(8 + downstream.length * 4, 22),
+      cites: downstream.map((s) => cite("Service", s.id, s.name))
     });
   }
 

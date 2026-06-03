@@ -3,6 +3,7 @@
 
 import { CONSTRAINTS } from "./schema.js";
 import * as model from "./model.js";
+import { assessPullRequest } from "./assess.js";
 
 const SEED_LABELS = [
   "Repository", "Team", "Developer", "Service", "Module", "File", "PullRequest",
@@ -14,6 +15,10 @@ const SEED_LABELS = [
 export function seedStatements() {
   const steps = [];
   const step = (query, params = {}) => steps.push({ query, params });
+
+  if (!model.repositories?.length || !model.pullRequests?.length) {
+    return steps;
+  }
 
   step(`MATCH (n) WHERE any(label IN labels(n) WHERE label IN $labels) DETACH DELETE n`, { labels: SEED_LABELS });
 
@@ -29,7 +34,22 @@ export function seedStatements() {
   step(`UNWIND $rows AS row MERGE (n:File {id: row.id}) SET n.path = row.path, n.securitySensitive = row.securitySensitive`, { rows: model.files });
   step(`UNWIND $rows AS row MERGE (n:IssueType {id: row.id}) SET n.name = row.name, n.severity = row.severity, n.description = row.description`, { rows: model.issueTypes });
   step(`UNWIND $rows AS row MERGE (n:RiskPattern {id: row.id}) SET n.name = row.name, n.severity = row.severity, n.description = row.description, n.embeddingText = row.embeddingText`, { rows: model.riskPatterns });
-  step(`UNWIND $rows AS row MERGE (n:PullRequest {id: row.id}) SET n.number = row.number, n.title = row.title, n.state = row.state, n.isAiAssisted = row.isAiAssisted, n.baseRiskScore = row.baseRiskScore, n.summary = row.summary`, { rows: model.pullRequests });
+  const prRows = model.pullRequests.map((pr) => {
+    const assessment = assessPullRequest(pr.id);
+    const graphSignals = assessment?.evidence?.length ?? 0;
+    return {
+      ...pr,
+      riskScore: assessment?.score ?? pr.baseRiskScore,
+      riskLevel: assessment?.level ?? "Unknown",
+      evidenceCount: graphSignals,
+      hasGraphRisk: graphSignals > 0,
+      isAiAssisted: pr.isAiAssisted || model.aiChanges.some((c) => c.prId === pr.id)
+    };
+  });
+  step(
+    `UNWIND $rows AS row MERGE (n:PullRequest {id: row.id}) SET n.number = row.number, n.title = row.title, n.state = row.state, n.isAiAssisted = row.isAiAssisted, n.baseRiskScore = row.baseRiskScore, n.summary = row.summary, n.riskScore = row.riskScore, n.riskLevel = row.riskLevel, n.evidenceCount = row.evidenceCount, n.hasGraphRisk = row.hasGraphRisk`,
+    { rows: prRows }
+  );
   step(`UNWIND $rows AS row MERGE (n:ReviewComment {id: row.id}) SET n.body = row.body, n.sentiment = row.sentiment, n.embeddingText = row.embeddingText`, { rows: model.reviewComments });
   step(`UNWIND $rows AS row MERGE (n:AIChange {id: row.id}) SET n.summary = row.summary, n.embeddingText = row.embeddingText`, { rows: model.aiChanges });
   step(`UNWIND $rows AS row MERGE (n:SecurityFinding {id: row.id}) SET n.title = row.title, n.severity = row.severity, n.description = row.description`, { rows: model.securityFindings });

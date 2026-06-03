@@ -12,12 +12,9 @@
 //   .reviewgraph.json  — ADRs, forbidden dependencies, security globs
 //   CODEOWNERS / .gitlab/CODEOWNERS — ownership for reviewer recommendation
 
-import {
-  AI_RE,
-  buildDatasetFromMergeRequests,
-  parseCodeowners,
-  parseReviewgraphJson
-} from "./shared.js";
+import { AI_RE, buildDatasetFromMergeRequests, parseCodeowners } from "./shared.js";
+import { fetchReviewgraphRules, mergeRulesFromPrFiles } from "./reviewgraphConfig.js";
+import { buildRepoSnapshotDataset, fetchGitlabRepoFilePaths } from "./repoSnapshot.js";
 
 const API = (process.env.GITLAB_API || "https://gitlab.com/api/v4").replace(/\/$/, "");
 
@@ -83,7 +80,7 @@ export async function loadGitlabDataset() {
   const projectInfo = await gl(`/projects/${pid}`);
   const defaultRef = projectInfo.default_branch || "main";
 
-  const rules = parseReviewgraphJson(await glRawFile(project, ".reviewgraph.json", defaultRef));
+  const rules = await fetchReviewgraphRules((path) => glRawFile(project, path, defaultRef));
 
   const coText =
     (await glRawFile(project, "CODEOWNERS", defaultRef)) ||
@@ -144,13 +141,22 @@ export async function loadGitlabDataset() {
     });
   }
 
+  const repoMeta = {
+    name: projectInfo.path_with_namespace || projectInfo.name,
+    url: projectInfo.web_url,
+    primaryLanguage: null
+  };
+
+  if (mergeRequests.length === 0) {
+    const files = await fetchGitlabRepoFilePaths(project, pid, gl, defaultRef);
+    return buildRepoSnapshotDataset({ repo: repoMeta, files, rules, codeowners, platform: "gitlab" });
+  }
+
+  const mergedRules = mergeRulesFromPrFiles(rules, mergeRequests);
+
   return buildDatasetFromMergeRequests({
-    repo: {
-      name: projectInfo.path_with_namespace || projectInfo.name,
-      url: projectInfo.web_url,
-      primaryLanguage: null
-    },
-    rules,
+    repo: repoMeta,
+    rules: mergedRules,
     codeowners,
     flagshipMrIid: onlyMr || null,
     mergeRequests

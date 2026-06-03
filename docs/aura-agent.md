@@ -1,5 +1,16 @@
 # ReviewGraph AI Aura Agent
 
+> **Where to configure:** Neo4j and VCS credentials go in [`.env`](../.env.example) (see [CONFIGURATION.md](CONFIGURATION.md)). The agent definition lives in [`domains/codereview/agent.json`](../domains/codereview/agent.json). Hosted deployment uses [aura-console-agent-setup.md](aura-console-agent-setup.md).
+
+## Integration summary
+
+| Path | Where | LLM |
+| --- | --- | --- |
+| **Local app** | `POST /api/ask` + `questions.js` | Not required — structured answers + Cypher + Neo4j rows |
+| **Aura Console** | Create agent on your Aura instance | Aura-managed (e.g. Gemini) |
+
+Both paths use the **same Cypher tools** defined in `agent.json`.
+
 ## Agent Name
 
 ReviewGraph AI

@@ -1,7 +1,5 @@
 import neo4j from "neo4j-driver";
-import dotenv from "dotenv";
-
-dotenv.config();
+import "./loadEnv.js";
 
 const uri = process.env.NEO4J_URI;
 const user = process.env.NEO4J_USER || process.env.NEO4J_USERNAME;

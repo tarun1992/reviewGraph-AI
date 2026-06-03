@@ -8,6 +8,7 @@ import { seedStatements } from "./seedStatements.js";
 import { ingest } from "./ingest.js";
 import { LABELS, RELATIONSHIPS, CONSTRAINTS } from "./schema.js";
 import { initModel, getFlagshipEntityId, getActiveSource, repositories } from "./model.js";
+import { syncGraphToNeo4j } from "../../server/syncNeo4j.js";
 
 const meta = {
   id: "codereview",
@@ -34,12 +35,14 @@ const meta = {
     { id: "incidents", title: "Incidents" }
   ],
   dataSource: "demo",
-  repository: null
+  repository: null,
+  neo4jSync: null
 };
 
 function syncMetaFromModel(initResult) {
   meta.flagshipEntityId = getFlagshipEntityId() || meta.flagshipEntityId;
   meta.dataSource = getActiveSource();
+  meta.entityCount = initResult?.entities ?? pullRequests.length;
   const repo = repositories[0];
   meta.repository = repo
     ? { name: repo.name, url: repo.url, language: repo.primaryLanguage }
@@ -48,11 +51,16 @@ function syncMetaFromModel(initResult) {
   else delete meta.sourceError;
 }
 
-/** Load graph from demo, GitHub, or GitLab based on .env. */
+/** Load graph from demo, GitHub, or GitLab based on .env; sync to Neo4j when configured. */
 export async function init() {
   const result = await initModel();
   syncMetaFromModel(result);
-  return result;
+  let neo4jSync = { synced: false, reason: "skipped" };
+  if (result.entities > 0) {
+    neo4jSync = await syncGraphToNeo4j(pack);
+  }
+  meta.neo4jSync = neo4jSync;
+  return { ...result, neo4jSync };
 }
 
 const pack = {

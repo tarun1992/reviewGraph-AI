@@ -1,17 +1,18 @@
-// GitHub data source — set GITHUB_REPO (and optionally GITHUB_TOKEN) in .env.
+// GitHub data source — configure via .env only (no code changes per repo).
 //
 //   GITHUB_REPO=owner/name
-//   GITHUB_TOKEN=ghp_xxx
-//   GITHUB_PR=512              optional: single PR
+//   GITHUB_TOKEN=ghp_xxx          # recommended: rate limits + private repos
+//   GITHUB_PR=512                 # optional: single PR
 //   GITHUB_MAX_PRS=15
-//   GITHUB_API=https://api.github.com   (GitHub Enterprise)
+//   GITHUB_API=https://api.github.com
 
+import { AI_RE, buildDatasetFromMergeRequests, parseCodeowners } from "./shared.js";
 import {
-  AI_RE,
-  buildDatasetFromMergeRequests,
-  parseCodeowners,
-  parseReviewgraphJson
-} from "./shared.js";
+  fetchReviewgraphRules,
+  mergeRulesFromPrFiles,
+  REVIEWGRAPH_CONFIG_PATHS
+} from "./reviewgraphConfig.js";
+import { buildRepoSnapshotDataset, fetchGithubRepoFilePaths } from "./repoSnapshot.js";
 
 const API = (process.env.GITHUB_API || "https://api.github.com").replace(/\/$/, "");
 
@@ -26,14 +27,37 @@ async function gh(pathname) {
   return res.json();
 }
 
-async function ghContent(repo, path) {
+async function ghContent(repo, path, ref) {
   try {
-    const data = await gh(`/repos/${repo}/contents/${path}`);
+    const refQ = ref ? `?ref=${encodeURIComponent(ref)}` : "";
+    const encodedPath = String(path)
+      .split("/")
+      .map(encodeURIComponent)
+      .join("/");
+    const data = await gh(`/repos/${repo}/contents/${encodedPath}${refQ}`);
     if (data?.content) return Buffer.from(data.content, data.encoding || "base64").toString("utf8");
   } catch {
     /* not found */
   }
   return null;
+}
+
+/** GitHub truncates large JSON in pull file patches — load full config from the PR head branch. */
+async function attachConfigFileContents(repo, mergeRequests) {
+  for (const mr of mergeRequests) {
+    const ref = mr.headRef;
+    if (!ref) continue;
+    for (const file of mr.files || []) {
+      if (
+        !file.path ||
+        (!REVIEWGRAPH_CONFIG_PATHS.includes(file.path) && !file.path.endsWith("reviewgraph-config.json"))
+      ) {
+        continue;
+      }
+      const full = await ghContent(repo, file.path, ref);
+      if (full) file.content = full;
+    }
+  }
 }
 
 export async function loadGithubDataset() {
@@ -44,7 +68,7 @@ export async function loadGithubDataset() {
   const maxPrs = Math.max(1, Number(process.env.GITHUB_MAX_PRS || 15));
 
   const repoInfo = await gh(`/repos/${repo}`);
-  const rules = parseReviewgraphJson(await ghContent(repo, ".reviewgraph.json"));
+  const rules = await fetchReviewgraphRules((path) => ghContent(repo, path));
 
   const coText =
     (await ghContent(repo, ".github/CODEOWNERS")) ||
@@ -57,7 +81,7 @@ export async function loadGithubDataset() {
     : await gh(`/repos/${repo}/pulls?state=all&per_page=${maxPrs}&sort=updated&direction=desc`);
 
   const mergeRequests = [];
-  for (const prSummary of prList.slice(0, maxPrs)) {
+  for (const prSummary of (Array.isArray(prList) ? prList : []).slice(0, maxPrs)) {
     const number = prSummary.number;
     const [prFilesRaw, reviews, comments] = await Promise.all([
       gh(`/repos/${repo}/pulls/${number}/files?per_page=100`).catch(() => []),
@@ -73,6 +97,7 @@ export async function loadGithubDataset() {
       body: prSummary.body,
       state: prSummary.merged_at ? "merged" : prSummary.state || "open",
       authorLogin: prSummary.user?.login,
+      headRef: prSummary.head?.ref,
       isAiAssisted: AI_RE.test(aiHaystack),
       labels: (prSummary.labels || []).map((l) => l.name),
       files: prFilesRaw.map((f) => ({
@@ -88,9 +113,35 @@ export async function loadGithubDataset() {
     });
   }
 
+  const repoMeta = {
+    name: repoInfo.full_name,
+    url: repoInfo.html_url,
+    primaryLanguage: repoInfo.language
+  };
+
+  if (mergeRequests.length === 0) {
+    const files = await fetchGithubRepoFilePaths(repo, gh);
+    return buildRepoSnapshotDataset({ repo: repoMeta, files, rules, codeowners, platform: "github" });
+  }
+
+  await attachConfigFileContents(repo, mergeRequests);
+
+  let mergedRules = mergeRulesFromPrFiles(rules, mergeRequests);
+  for (const mr of mergeRequests) {
+    if (!mr.headRef) continue;
+    for (const configPath of REVIEWGRAPH_CONFIG_PATHS) {
+      const fromHead = await ghContent(repo, configPath, mr.headRef);
+      if (fromHead) {
+        mergedRules = mergeRulesFromPrFiles(mergedRules, [
+          { files: [{ path: configPath, content: fromHead }] }
+        ]);
+      }
+    }
+  }
+
   return buildDatasetFromMergeRequests({
-    repo: { name: repoInfo.full_name, url: repoInfo.html_url, primaryLanguage: repoInfo.language },
-    rules,
+    repo: repoMeta,
+    rules: mergedRules,
     codeowners,
     flagshipMrIid: onlyPr || null,
     mergeRequests
