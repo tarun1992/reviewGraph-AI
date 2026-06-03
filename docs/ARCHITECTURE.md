@@ -384,6 +384,7 @@ sequenceDiagram
 
 - [CONFIGURATION.md](CONFIGURATION.md) — all credentials and entry points
 - [IMPLEMENTATION.md](IMPLEMENTATION.md) — feature checklist
+- [TOKEN_ECONOMICS.md](TOKEN_ECONOMICS.md) — graph vs general-purpose agents (LLM token cost model)
 - [adr/README.md](adr/README.md) — architecture decision records
 - [GETTING_STARTED.md](GETTING_STARTED.md) — tutorials
 - [product-context.md](product-context.md) — product vision

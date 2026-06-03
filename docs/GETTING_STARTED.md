@@ -10,6 +10,7 @@ ReviewGraph AI is an **Aura-powered engineering intelligence agent** for reviewi
 | --- | --- |
 | [CONFIGURATION.md](CONFIGURATION.md) | Where to enter GitHub, GitLab, Neo4j, and Aura details |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Technical architecture with detailed diagrams |
+| [TOKEN_ECONOMICS.md](TOKEN_ECONOMICS.md) | Graph vs frontier agents — LLM token cost model |
 | [IMPLEMENTATION.md](IMPLEMENTATION.md) | Complete list of what is built |
 | [adr/](adr/) | Architecture decision records for the platform |
 

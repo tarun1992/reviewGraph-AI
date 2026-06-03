@@ -163,6 +163,7 @@ For evaluators: use the **in-app demo** or request a Console invite to the same 
 | `server/index.js` | API (`/api/ask`, `/api/health`, …) |
 | `src/main.jsx` | React UI |
 | `docs/ARCHITECTURE.md` | Diagrams |
+| `docs/TOKEN_ECONOMICS.md` | Graph vs frontier agents — LLM token cost model |
 | `docs/AURA_LIVE_INTEGRATION.md` | Aura setup |
 | `docs/aura-console-agent-setup.md` | Console checklist |
 | `decks/dist/*.pptx` | Business, technical, getting started decks |

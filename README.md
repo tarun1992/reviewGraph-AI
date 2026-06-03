@@ -153,6 +153,7 @@ domains/codereview/         ReviewGraph AI: model, assess, questions (Text2Cyphe
 | [aura-agent.md](docs/aura-agent.md) | Aura agent tools and prompts |
 | [AURA_LIVE_INTEGRATION.md](docs/AURA_LIVE_INTEGRATION.md) | Live Neo4j + Text2Cypher: what works in-app vs Aura Console |
 | [SECURITY.md](docs/SECURITY.md) | Credentials on server only; API sanitization and endpoint risks |
+| [TOKEN_ECONOMICS.md](docs/TOKEN_ECONOMICS.md) | Graph vs frontier agents — when you save LLM tokens (and when you do not) |
 | [adr/](docs/adr/) | Architecture decision records |
 
 ## Deploy to Neo4j Aura

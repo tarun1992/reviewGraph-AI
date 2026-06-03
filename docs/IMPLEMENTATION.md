@@ -131,6 +131,7 @@ Startup: `pack.init()` → `initModel()` in `server/index.js`, `server/seed.js`,
 | `npm run aura:verify` | Done |
 | `npm run aura:vectors` | Done |
 | Architecture doc | [ARCHITECTURE.md](ARCHITECTURE.md) |
+| Token economics | [TOKEN_ECONOMICS.md](TOKEN_ECONOMICS.md) |
 | ADRs | [adr/](adr/) |
 | Configuration guide | [CONFIGURATION.md](CONFIGURATION.md) |
 
